@@ -5,12 +5,15 @@
 const static int MaxLine = 1024;
 const int AIO_BUFFER_SIZE = 1024;
 
+//日志文件路径，请在配置文件中配置，覆盖默认设置
+static char LOG_FILE_PATH[128] = "/tmp/";
+//配置文件路径
 static char FILE_ABS_PATH[128];
 static pthread_t t_1;
 static int FILE_SIZE_NUM = 1;
 static long FILE_MAX_SIZE = 1024*1024;
 static int TNUM = 64; 
-static int LOGNUM = 64;
+static int LOGNUM = 128;
 static char LOG_NAME[64];
 static pthread_mutex_t sMux; 
 //单条日志总长度
@@ -20,9 +23,9 @@ static int CONFLEN = 128;
 int getValue(char*key,char*value){
 	int len = 0;
 	char*tempValue = NULL;
-	memset(value,0,sizeof(value));
+	memset(value,0,CONFLEN);
 	int ret = intput_config_value(FILE_ABS_PATH,key,&tempValue,&len);
-	snprintf(value,sizeof(value),"%s",tempValue);
+	snprintf(value,CONFLEN,"%s",tempValue);
 	if(tempValue != NULL){
 		free(tempValue);
 		tempValue = NULL;
@@ -201,7 +204,7 @@ int get_local_time(char * buffer){
 //在日志文件后添加.log
 void snp_str_log(LOG_LEVEL level,char *sour,char *dest){
 	memset(dest, 0, sizeof(dest));
-	snprintf(dest, LOGNUM ,"%s_%s.log",log_level_2_str(level),sour);
+	snprintf(dest, LOGNUM ,"%s%s_%s.log",LOG_FILE_PATH,log_level_2_str(level),sour);
 }
 
 //AIO回调函数
@@ -275,6 +278,53 @@ void write_log_file(LOG_LEVEL level,char* buffer){
 	o_write_file(logname,buffer);
 }
 
+//删除日志文件路径空格，添加斜杠
+void rmStrChar(char* filename,char c,char *strx){
+	int slen = strlen(filename);
+	memset(strx,0,slen+1);
+	if(!( strchr(filename,' ') == NULL)){
+		int i,j;
+		for(i = 0,j = 0;i < slen; i++){
+			if(filename[i] != c){
+				strx[j] = filename[i];
+				j++;
+			}
+		}
+		if(strx[j-1] != '/'){
+			strx[j++] = '/';
+		}
+		strx[j] = '\0';
+	}else{
+		if(filename[slen-1] != '/'){
+			memcpy(strx,filename,slen);
+			strx[slen] = '/';
+			strx[slen+1] = '\0';
+		}
+	}
+}
+
+//级联创建文件夹
+int createDir(const char *sPathName){  
+	char DirName[256];  
+	strcpy( DirName,sPathName);  
+	int i,len = strlen(DirName);  
+	if(DirName[len-1]!='/')strcat(DirName, "/");  
+	len = strlen(DirName);  
+	for(i=1;   i<len;   i++){  
+		if(DirName[i]=='/'){
+			DirName[i] = 0;  
+			if( access(DirName, W_OK) != 0   ){  
+				if(mkdir(DirName,   0755)==-1){   
+					perror("mkdir   error");   
+					return   -1; 
+				}
+			}  
+			DirName[i] = '/';  
+		}  
+	}  
+	return 0;  
+} 
+
 //封装终-记日志
 int stLog(LOG_LEVEL level,int pid,char* fmt,...){
 	
@@ -311,26 +361,33 @@ int stLog(LOG_LEVEL level,int pid,char* fmt,...){
 }
 
 //日志系统初始化
-void log_init(char * log_conf){
+void log_init(char * logConfPath){
 
-	memcpy(FILE_ABS_PATH,log_conf,strlen(log_conf));
+	memcpy(FILE_ABS_PATH,logConfPath,strlen(logConfPath));
 	
 	char buffer[CONFLEN];
+	if(getValue("LOG_FILE_PATH",buffer) == 1){
+		char str[strlen(buffer) + 1];
+		rmStrChar(buffer,' ',str);
+		memset(LOG_FILE_PATH,0,CONFLEN);
+		memcpy(LOG_FILE_PATH,str,strlen(str));
+		//printf("LOG_FILE_PATH_OK---->%s\n",LOG_FILE_PATH);
+	}
 	if(getValue("FILE_SIZE_NUM",buffer) == 1){
 		FILE_SIZE_NUM = atol(buffer);
-		printf("FILE_SIZE_NUM_OK---->%ld\n",FILE_SIZE_NUM);
+		//printf("FILE_SIZE_NUM_OK---->%ld\n",FILE_SIZE_NUM);
 	}
 	if(getValue("TNUM",buffer) == 1){
 		TNUM = atoi(buffer);
-		printf("TNUM_OK---->%d\n",TNUM);
+		//printf("TNUM_OK---->%d\n",TNUM);
 	}
 	if(getValue("LOGNUM",buffer) == 1){
 		LOGNUM = atoi(buffer);
-		printf("LOGNUM_OK---->%s\n",buffer);
+		//printf("LOGNUM_OK---->%s\n",buffer);
 	}
 	if(getValue("LOG_SIZE",buffer) == 1){
 		LOG_SIZE = atoi(buffer);
-		printf("LOG_SIZE_OK---->%d\n",LOG_SIZE);
+		//printf("LOG_SIZE_OK---->%d\n",LOG_SIZE);
 	}
 
 	get_local_time(LOG_NAME);
@@ -338,4 +395,8 @@ void log_init(char * log_conf){
 	if(pthread_create(&t_1,NULL,lockLogfile,&x)){
 		printf("funcA_t create failed!\n"); 
 	}
+	if(!opendir(LOG_FILE_PATH)){
+		createDir(LOG_FILE_PATH);
+	}
+	
 }
