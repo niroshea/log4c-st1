@@ -1,24 +1,21 @@
 #define  _CRT_SECURE_NO_WARNINGS 
 #include "st_log.h"
 
-/* 行缓冲大小 */
+//行缓冲大小
 const static int MaxLine = 1024;
 const int AIO_BUFFER_SIZE = 1024;
 
 static char FILE_ABS_PATH[128];
 static pthread_t t_1;
-static long FILE_MAX_SIZE = 10*1024;
+static int FILE_SIZE_NUM = 1;
+static long FILE_MAX_SIZE = 1024*1024;
 static int TNUM = 64; 
 static int LOGNUM = 64;
 static char LOG_NAME[64];
 static pthread_mutex_t sMux; 
-//fopen缓冲区大小
-static int FOPEN_BUFF_SIZE = 1024;
 //单条日志总长度
 static int LOG_SIZE = 1024;
 static int CONFLEN = 128;
-//struct aiocb *cblist[1];
-//typedef struct aiocb  aiocb_t;
 
 int getValue(char*key,char*value){
 	int len = 0;
@@ -30,7 +27,6 @@ int getValue(char*key,char*value){
 		free(tempValue);
 		tempValue = NULL;
 	}
-	printf("getValue=================>%s\n",value);
 	return ret;
 }
 
@@ -113,16 +109,10 @@ int intput_config_value(char *file_absolute_path, char *key, char **value, int *
         tempValue = (char*)malloc((*len) * sizeof(char));
         memcpy(tempValue, start, (*len));
         *value = tempValue;
-		//printf("tempValue:%s\n",*value);
-		/* if(tempValue != NULL){
-			free(tempValue);
-			tempValue = NULL;
-		} */
 		if(*value == "" || *value == NULL){
 			ret = 0;
 		}else{
 			ret = 1;
-			//printf("\n========------>%s\n",*value);
 			return ret;
 		}
     }
@@ -155,7 +145,6 @@ void *lockLogfile(void *p){
 	char logname[LOGNUM];
 	int count = 0 ;
 	while(1){
-		//char *str = (char*)p;
 		//在日志名后添加.log
 		memset(logname, 0, sizeof(logname));
 		snprintf(logname, LOGNUM ,"%s_%s.log","WARN",LOG_NAME);
@@ -177,7 +166,7 @@ void *lockLogfile(void *p){
 		
 		printf("111111111111====> %s\n",logname);
 		
-		if ( length > FILE_MAX_SIZE ){//检测到文件太大
+		if ( length > FILE_SIZE_NUM * FILE_MAX_SIZE ){//检测到文件太大
 			count++;
 			printf("111111111111====> File is too large,start to split.\n");
 			o_get_new_name(LOG_NAME,count);
@@ -220,19 +209,9 @@ void aio_return_handl(sigval_t sigval){
 	struct aiocb *prd;
     prd = (struct aiocb *)sigval.sival_ptr;
     
-	if(aio_error(prd) == 0){
-		int i = aio_return(prd);
-		printf("aio_return %d\n",i);
-	}else{
-		printf("aio_error\n");
-	}
-	
-	if((*prd).aio_fildes){
-		close((*prd).aio_fildes);
-		printf("is closing...\n");
-	}else{
-		printf("file closed\n");
-	}
+	if(aio_error(prd) == 0)aio_return(prd);
+	//关闭文件描述符
+	if((*prd).aio_fildes)close((*prd).aio_fildes);
 }
 
 
@@ -241,25 +220,13 @@ int aio_w_file(char * const filename,char * const str){
 	
 	struct aiocb   my_aio;
 	struct aiocb *cblist[1];
-	//struct aiocb  *my_aio_list[1] = {&my_aio};
 	
 	memset((char*)&my_aio,0,sizeof(struct aiocb));
 	memset((char*)cblist,0,sizeof(cblist));
 	cblist[0] = &my_aio;
 	
 	int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT , 0666);
-	if (-1 == fd){
-		printf("Error %d: Failed to open file\n", errno);
-		return 0;
-	}
-	
-	if(fd < 0){
-		//printf("---------9-20----2---%s\n",filename);
-		return 2;
-	}
-	
-	//wr.aio_buf = (char *)malloc(AIO_BUFFER_SIZE + 1);
-	//if(wr.aio_buf == NULL) perror("buf");
+	if(fd < 0)return 2;
 	
 	my_aio.aio_fildes = fd;
     my_aio.aio_buf = str;
@@ -270,17 +237,11 @@ int aio_w_file(char * const filename,char * const str){
     my_aio.aio_sigevent.sigev_notify_attributes = NULL;
     my_aio.aio_sigevent.sigev_value.sival_ptr = &my_aio;
 	
-	//int ret = aio_write((void *)&wr);
-	if(aio_write((void *)&my_aio) < 0){
-		printf("---------9-20---3----%s\n",filename);
-		return 3;	
-	}
+	//开始写文件
+	if(aio_write((void *)&my_aio) < 0)return 3;	
+	//等待文件返回
+	if( aio_suspend((const struct aiocb * const*)cblist, 1, NULL) < 0 )return 4;
 	
-	if( aio_suspend((const struct aiocb * const*)cblist, 1, NULL) < 0 ){
-		printf("---------9-20---4----%s\n",filename);
-		return 4;
-	}
-	//sleep(1);
 	return 1;
 }
 
@@ -299,13 +260,12 @@ int o_write_file(char* filename,char* buffer){
 	int f = aio_w_file(filename,s_buf);
 	
 	if(f == 1){
-		//printf("异步写入成功！\n");
 		return 0;
+	}else{
+		return 2;
 	}
-	else if(f == 2)printf("打开日志文件失败！\n");
-	else if(f == 3)printf("异步写入失败！\n");
 	
-	return 0;
+	return 2;
 }
 
 //封装2-写文件
@@ -323,9 +283,6 @@ int stLog(LOG_LEVEL level,int pid,char* fmt,...){
 	memset(buffer, 0, sizeof(buffer));
 	
 	snprintf(buffer, sizeof(buffer) ," %s ==> PID_%d =>",log_level_2_str(level), pid);
-	//snprintf(buffer, sizeof(buffer) ," %s ==> ",log_level_2_str(level));
-	//strcat(buffer);
-	
 	
 	va_list ap;
 	va_start(ap,fmt);
@@ -359,9 +316,9 @@ void log_init(char * log_conf){
 	memcpy(FILE_ABS_PATH,log_conf,strlen(log_conf));
 	
 	char buffer[CONFLEN];
-	if(getValue("FILE_MAX_SIZE",buffer) == 1){
-		FILE_MAX_SIZE = atol(buffer);
-		printf("FILE_MAX_SIZE_OK---->%ld\n",FILE_MAX_SIZE);
+	if(getValue("FILE_SIZE_NUM",buffer) == 1){
+		FILE_SIZE_NUM = atol(buffer);
+		printf("FILE_SIZE_NUM_OK---->%ld\n",FILE_SIZE_NUM);
 	}
 	if(getValue("TNUM",buffer) == 1){
 		TNUM = atoi(buffer);
@@ -370,10 +327,6 @@ void log_init(char * log_conf){
 	if(getValue("LOGNUM",buffer) == 1){
 		LOGNUM = atoi(buffer);
 		printf("LOGNUM_OK---->%s\n",buffer);
-	}
-	if(getValue("FOPEN_BUFF_SIZE",buffer) == 1){
-		FOPEN_BUFF_SIZE = atoi(buffer);
-		printf("FOPEN_BUFF_SIZE_OK---->%d\n",FOPEN_BUFF_SIZE);
 	}
 	if(getValue("LOG_SIZE",buffer) == 1){
 		LOG_SIZE = atoi(buffer);
