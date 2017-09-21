@@ -248,25 +248,13 @@ int aio_w_file(char * const filename,char * const str){
 	cblist[0] = &my_aio;
 	
 	int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT , 0666);
-	if (-1 == fd)
-	{
+	if (-1 == fd){
 		printf("Error %d: Failed to open file\n", errno);
-
-		if (errno == EEXIST )
-		{
-		   printf("EEXIST 参数pathname 所指的文件已存在, 却使用了O_CREAT 和O_EXCL 旗标. \r\n");
-		   
-		}else if(errno == EACCES)
-		{
-			 printf("EACCESS 参数pathname 所指的文件不符合所要求测试的权限.\r\n");
-			  
-		}else if(errno == EROFS)
-		{
-			 printf("EROFS 欲测试写入权限的文件存在于只读文件系统内.\r\n");
-		}
+		return 0;
 	}
+	
 	if(fd < 0){
-		printf("---------9-20----2---%s\n",filename);
+		//printf("---------9-20----2---%s\n",filename);
 		return 2;
 	}
 	
