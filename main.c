@@ -1,4 +1,4 @@
-#include "st_log.h"
+#include "hrbb_log.h"
 //#include <sys/stat.h> 
 //static pthread_t t_1;  
 //static pthread_t t_2;
@@ -6,7 +6,7 @@
 void *funcA(void *p){
 	int count = *((int*)p);
 	while(1){
-		stLog(WARN,count,"%s%s","zhe shi yi tiao WARN!=================================================================================","hfdkjahkfhakshdfjk");
+		stLog(WARN,count,"%s%s","zhe shi yi tiao WARN!=======================================","hfdkjahkfhakshdfjk");
 		sleep(1);
 	}
 }

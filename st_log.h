@@ -24,19 +24,21 @@ extern "C" {
 #include <fcntl.h>
 #include <aio.h>
 
-typedef enum {  
-    DEBUG,  
+typedef enum {
+	YYJYLS,
+	YYERROR
+/*     DEBUG,  
     INFO,  
     WARN,  
     ERROR,  
-    OFF  
+    OFF  */ 
 }LOG_LEVEL; 
 
 //写日志
 int stLog(LOG_LEVEL level,int pid,char* fmt,...);
 
 //日志系统初始化
-void log_init(char * logConfPath);
+void log_init(char *logConfPath);
 
 #ifdef  __cplusplus
 }
