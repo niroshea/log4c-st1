@@ -104,8 +104,8 @@ void log_init(char * logConfPath){
 	snprintf(log_tmp_path,LOGNUM,"%s%s",LOG_FILE_PATH,"YYERROR/");
 	snprintf(log_tmp_path2,LOGNUM,"%s%s",LOG_FILE_PATH,"YYJYLS/");
 
-	if(!opendir(log_tmp_path))createDir(log_tmp_path);
-	if(!opendir(log_tmp_path2))createDir(log_tmp_path2);
+	if( access(log_tmp_path,F_OK) == -1)createDir(log_tmp_path);
+	if( access(log_tmp_path2,F_OK) == -1)createDir(log_tmp_path2);
 }
 
 //封装终-记日志
@@ -361,17 +361,27 @@ void *moLogfile(void *arg){
 	int count1 = 1 ;
 	int count2 = 1 ;
 	while(1){
-		//该线程函数管理日志名
+		//该线程函数管理日志名,文件夹是否存在，是否被误删
 		//printf("start!\n");
 		memset(LOG_ABS_PATH_JYLS,0,LOGNUM);
 		memset(LOG_ABS_PATH_ERROR,0,LOGNUM);
-
+		
+		snprintf(LOG_ABS_PATH_JYLS, LOGNUM ,"%s%s",LOG_FILE_PATH,"YYJYLS/");
+		snprintf(LOG_ABS_PATH_ERROR, LOGNUM ,"%s%s",LOG_FILE_PATH,"YYERROR/");
+		
+		printf("LOG_ABS_PATH_JYLS==========1======>%s\n",LOG_ABS_PATH_JYLS);
+		printf("LOG_ABS_PATH_ERROR=========1====>%s\n",LOG_ABS_PATH_ERROR);
+		
+		if( access(LOG_ABS_PATH_JYLS,F_OK) == -1 )createDir(LOG_ABS_PATH_JYLS);
+		if( access(LOG_ABS_PATH_ERROR,F_OK) == -1 )createDir(LOG_ABS_PATH_ERROR);		
+		
 		snprintf(LOG_ABS_PATH_JYLS, LOGNUM ,"%s%s%s_%s_%s_%04d.log",LOG_FILE_PATH,"YYJYLS/",APP_NAME,"YYJYLS",LOG_TIME_JYLS,count1);
 		snprintf(LOG_ABS_PATH_ERROR, LOGNUM ,"%s%s%s_%s_%s_%04d.log",LOG_FILE_PATH,"YYERROR/",APP_NAME,"YYERROR",LOG_TIME_ERROR,count2);
 		//snp_str_log(loglevel,LOG_TIME,logname);
-		//printf("LOG_ABS_PATH_JYLS================>%s\n",LOG_ABS_PATH_JYLS);
-		//printf("LOG_ABS_PATH_ERROR=============>%s\n",LOG_ABS_PATH_ERROR);
-
+		printf("LOG_ABS_PATH_JYLS========2========>%s\n",LOG_ABS_PATH_JYLS);
+		printf("LOG_ABS_PATH_ERROR========2=====>%s\n",LOG_ABS_PATH_ERROR);
+		//abort();
+		
 		//计算长度
 		long length1 = 0;
 		long length2 = 0;
