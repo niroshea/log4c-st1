@@ -196,13 +196,13 @@ int aio_w_file(char * const filename,char * const str){
 	if(fd < 0)return 2;
 	
 	my_aio.aio_fildes = fd;
-    my_aio.aio_buf = str;
+	my_aio.aio_buf = str;
 	my_aio.aio_nbytes = strlen(str);
 
 	my_aio.aio_sigevent.sigev_notify = SIGEV_THREAD;
-    my_aio.aio_sigevent.sigev_notify_function = aio_return_handl;
-    my_aio.aio_sigevent.sigev_notify_attributes = NULL;
-    my_aio.aio_sigevent.sigev_value.sival_ptr = &my_aio;
+	my_aio.aio_sigevent.sigev_notify_function = aio_return_handl;
+	my_aio.aio_sigevent.sigev_notify_attributes = NULL;
+	my_aio.aio_sigevent.sigev_value.sival_ptr = &my_aio;
 	
 	//开始写文件
 	if(aio_write((void *)&my_aio) < 0)return 3;	
@@ -323,35 +323,35 @@ int intput_config_value(char *file_absolute_path, char *key, char **value, int *
                 start = tempP;
                 if (*start == '\n') { //表示只有键 没有键值的情况
                     ret = -3;
-					if (file != NULL) {
-						fclose(file);
-						file = NULL;
-					}
-					return ret;
-				}
+			if (file != NULL) {
+				fclose(file);
+				file = NULL;
+			}
+			return ret;
+		}
                 break;
             }
         }
         while (1) {
-			if(*tempP == ' ' || *tempP == '\n' || *tempP == '\r')break;
-			tempP++;
+		if(*tempP == ' ' || *tempP == '\n' || *tempP == '\r')break;
+		tempP++;
         }
         end = tempP;
-		*tempP = '\0';
+	*tempP = '\0';
         //计算出value长度
         *len = end - start + 1;
         tempValue = (char*)malloc((*len) * sizeof(char));
-		int s = 0;
-		for(;s < *len ; s++){
-			tempValue[s] = start[s];
-		}
-		*value = tempValue;
-		if(*value == "" || *value == NULL){
-			ret = 0;
-		}else{
-			ret = 1;
-			return ret;
-		}
+	int s = 0;
+	for(;s < *len ; s++){
+		tempValue[s] = start[s];
+	}
+	*value = tempValue;
+	if(*value == "" || *value == NULL){
+		ret = 0;
+	}else{
+		ret = 1;
+		return ret;
+	}
     }
     return ret;
 }
@@ -369,8 +369,8 @@ void *moLogfile(void *arg){
 		snprintf(LOG_ABS_PATH_JYLS, LOGNUM ,"%s%s",LOG_FILE_PATH,"YYJYLS/");
 		snprintf(LOG_ABS_PATH_ERROR, LOGNUM ,"%s%s",LOG_FILE_PATH,"YYERROR/");
 		
-		printf("LOG_ABS_PATH_JYLS==========1======>%s\n",LOG_ABS_PATH_JYLS);
-		printf("LOG_ABS_PATH_ERROR=========1====>%s\n",LOG_ABS_PATH_ERROR);
+		//printf("LOG_ABS_PATH_JYLS==========1======>%s\n",LOG_ABS_PATH_JYLS);
+		//printf("LOG_ABS_PATH_ERROR=========1====>%s\n",LOG_ABS_PATH_ERROR);
 		
 		if( access(LOG_ABS_PATH_JYLS,F_OK) == -1 )createDir(LOG_ABS_PATH_JYLS);
 		if( access(LOG_ABS_PATH_ERROR,F_OK) == -1 )createDir(LOG_ABS_PATH_ERROR);		
@@ -378,8 +378,8 @@ void *moLogfile(void *arg){
 		snprintf(LOG_ABS_PATH_JYLS, LOGNUM ,"%s%s%s_%s_%s_%04d.log",LOG_FILE_PATH,"YYJYLS/",APP_NAME,"YYJYLS",LOG_TIME_JYLS,count1);
 		snprintf(LOG_ABS_PATH_ERROR, LOGNUM ,"%s%s%s_%s_%s_%04d.log",LOG_FILE_PATH,"YYERROR/",APP_NAME,"YYERROR",LOG_TIME_ERROR,count2);
 		//snp_str_log(loglevel,LOG_TIME,logname);
-		printf("LOG_ABS_PATH_JYLS========2========>%s\n",LOG_ABS_PATH_JYLS);
-		printf("LOG_ABS_PATH_ERROR========2=====>%s\n",LOG_ABS_PATH_ERROR);
+		//printf("LOG_ABS_PATH_JYLS========2========>%s\n",LOG_ABS_PATH_JYLS);
+		//printf("LOG_ABS_PATH_ERROR========2=====>%s\n",LOG_ABS_PATH_ERROR);
 		//abort();
 		
 		//计算长度
