@@ -444,7 +444,7 @@ void *moLogfile(void *arg){
 		//printf("====================>%d\n", 1);
 		
 		if ( length1 > FILE_SIZE_NUM * FILE_MAX_SIZE ){//检测到文件太大
-			if(count1 > 9999)count2 = 1;else count1++;
+			if(count1 > 9999)count1 = 1;else count1++;
 			get_local_time(LOG_TIME_JYLS);
 		}
 		if ( length2 > FILE_SIZE_NUM * FILE_MAX_SIZE ){//检测到文件太大
