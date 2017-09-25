@@ -18,7 +18,9 @@ int main(){
 	
 	log_init("配置文件路径");  //一定要有，这是日志插件初始化，读取配置的进程，先启动才能运行
 	
-	stLog(YYJYLS,"%s%s%d","string1","string2","number");// 日志写入函数，写入等级有两个  一个为 YYJYLS  一个为 YYERROR 后面的 "%s%d" 为格式化输出，有几个%s 后面就可跟几个字符串变量。现在仅支持字符串 char* 和 整型int。
+	// 日志写入函数，写入等级有两个  一个为 YYJYLS  一个为 YYERROR 。
+	//后面的 "%s%d" 为格式化输出，有几个%s 后面就可跟几个字符串变量。现在仅支持字符串 char* 和 整型int。
+	stLog(YYJYLS,"%s%s%d","string1","string2","number");
 	
 	return 0
 }
