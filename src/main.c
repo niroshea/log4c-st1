@@ -17,7 +17,7 @@ void *funcB(void *p){
 }
 
 int main(int argc,char** argv){
-	log_init("log.config");
+	log_init("../config/log.config");
 		
 	int i = 0;
 	for(; i < 1000 ; i++){
