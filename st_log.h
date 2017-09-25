@@ -35,7 +35,8 @@ typedef enum {
 }LOG_LEVEL; 
 
 //写日志
-int stLog(LOG_LEVEL level,int pid,char* fmt,...);
+int stLog_t(LOG_LEVEL level,int pid,char* fmt,...);
+int stLog(LOG_LEVEL level,char* fmt,...);
 
 //日志系统初始化
 void log_init(char *logConfPath);

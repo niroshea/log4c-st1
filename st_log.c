@@ -108,8 +108,42 @@ void log_init(char * logConfPath){
 	if( access(log_tmp_path2,F_OK) == -1)createDir(log_tmp_path2);
 }
 
-//封装终-记日志
-int stLog(LOG_LEVEL level,int pid,char* fmt,...){
+//封装终-记日志01
+int stLog(LOG_LEVEL level,char* fmt,...){
+	
+	char buffer[LOG_SIZE];
+	memset(buffer, 0, LOG_SIZE);
+	
+	snprintf(buffer, LOG_SIZE ," %s == ",log_level_2_str(level));
+	
+	va_list ap;
+	va_start(ap,fmt);
+	
+	char*p = fmt;
+	while(*p){
+		if(*p == '%' && *(p+1) == 'd'){
+			char num[16];
+			memset(num,0,sizeof(num));
+			snprintf(num,sizeof(num),"%d",va_arg(ap, int));
+			strcat(buffer,num);
+		}else if(*p == '%' && *(p+1) == 's'){
+			char num[LOGNUM];
+			memset(num,0,LOGNUM);
+			snprintf(num,LOGNUM,"%s",va_arg(ap, char*));
+			strcat(buffer,num);
+		}
+		p++;
+	}
+	va_end(ap);
+	
+	strcat(buffer,"\n");
+	o_write_file(level,buffer);
+	return 0;
+}
+
+
+//封装终-记日志 for test
+int stLog_t(LOG_LEVEL level,int pid,char* fmt,...){
 	
 	//char* str ,
 	char buffer[LOG_SIZE];
@@ -214,22 +248,19 @@ int aio_w_file(char * const filename,char * const str){
 
 //级联创建文件夹
 int createDir(const char *sPathName){
-	
-	
-	
 	char DirName[256];  
 	strcpy( DirName,sPathName);  
 	int i,len = strlen(DirName);  
 	
 	if(DirName[len-1]!='/')strcat(DirName, "/");  
 	len = strlen(DirName);  
-
+	
 	for(i=1;   i<len;   i++){  
 		if(DirName[i]=='/'){
 			DirName[i] = 0;
 			if( access(DirName, W_OK) != 0   ){  
 				if(mkdir(DirName,   0644)==-1){   
-					perror("mkdir   error");   
+					//perror("mkdir   error");   
 					return   -1; 
 				}
 			}  
@@ -295,7 +326,7 @@ int intput_config_value(char *file_absolute_path, char *key, char **value, int *
         //读取行
         tempP = fgets(lineBuf,MaxLine,file);
         
-		if(*lineBuf == '#' || *lineBuf == ' ' || *lineBuf == '\n'){
+		if(*lineBuf == '#' || *lineBuf == ' ' || *lineBuf == '\n' || *lineBuf == '\r'){
 			continue;
 		}
 		
@@ -403,23 +434,23 @@ void *moLogfile(void *arg){
 			fp = NULL;
 		}
 		
-		//printf("111111111111====> File is too large,start to split.\n");
+		//printf("==============> File is too large,start to split.\n");
 		
  		//tArg *x;
 		//x = (tArg *)arg;
 
 		//printf("-=s-df-sdfx%s\n",LOG_ABS_PATH_JYLS);
 		//printf("-=s-df-sdfx%s\n",LOG_ABS_PATH_ERROR);
-		//printf("0000000000000000000110101010111===>%d\n", 1);
+		//printf("====================>%d\n", 1);
 		
 		if ( length1 > FILE_SIZE_NUM * FILE_MAX_SIZE ){//检测到文件太大
-			count1++;
+			if(count1 > 9999)count2 = 1;else count1++;
 			get_local_time(LOG_TIME_JYLS);
 		}
 		if ( length2 > FILE_SIZE_NUM * FILE_MAX_SIZE ){//检测到文件太大
-			count2++;
+			if(count2 > 9999)count2 = 1;else count2++;
 			get_local_time(LOG_TIME_ERROR);
 		}
-		sleep(6);
+		sleep(5);
 	}
 }

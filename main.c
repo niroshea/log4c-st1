@@ -3,7 +3,7 @@
 void *funcA(void *p){
 	int count = *((int*)p);
 	while(1){
-		stLog(YYJYLS,count,"%s%s%d","zhe shi yi tiao YYJYLS!==================AHSDKFJHAKJSDHFJKASDF65456454=====================","=======hfdkjahkfhakshdfjk===",count);
+		stLog(YYJYLS,"%s%s%d","zhe shi yi tiao YYJYLS!==================AHSDKFJHAKJSDHFJKASDF65456454=====================","=======hfdkjahkfhakshdfjk===",count);
 		sleep(1);
 	}
 }
@@ -11,7 +11,7 @@ void *funcA(void *p){
 void *funcB(void *p){
 	int count = *((int*)p);
 	while(1){
-		stLog(YYERROR,count,"%s%s%d","zhe shi yi tiao YYERROR!=========SDF88888888888888888888888888888888888888888888888888==========","=======0hf6545466dsdfsdxxxx==",count);
+		stLog(YYERROR,"%s%s%d","zhe shi yi tiao YYERROR!=========SDF88888888888888888888888888888888888888888888888888==========","=======0hf6545466dsdfsdxxxx==",count);
 		sleep(1);
 	}
 }
