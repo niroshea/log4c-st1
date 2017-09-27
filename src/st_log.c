@@ -83,17 +83,17 @@ void log_init(char * logConfPath){
 
 	if(getValue("FILE_SIZE_NUM",buffer) == 1){
 		int tmp = atoi(buffer);
-			
 		if(tmp > 0)FILE_SIZE_NUM = tmp;
-		
-		//printf("FILE_SIZE_NUM_OK---->%d\n",FILE_SIZE_NUM);
-		
 	}
+
+	if(getValue("LOG_SIZE",buffer) == 1){
+		int tmp = atoi(buffer);
+		if(tmp > 1024)LOG_SIZE = tmp;
+	}
+
 	get_local_time(LOG_TIME_JYLS);
 	get_local_time(LOG_TIME_ERROR);
 
-	//tArg *x;
-	//x->ts = 36;
 	int x = 1;
 	if(pthread_create(&t_1,NULL,moLogfile,&x))perror("funcA_t create failed!\n");
 
@@ -123,8 +123,8 @@ int stLog(LOG_LEVEL level,char* fmt,...){
 	while(*p){
 		if(*p == '%' && *(p+1) == 'd'){
 			char num[16];
-			memset(num,0,sizeof(num));
-			snprintf(num,sizeof(num),"%d",va_arg(ap, int));
+			memset(num,0,16);
+			snprintf(num,16,"%d",va_arg(ap, int));
 			strcat(buffer,num);
 		}else if(*p == '%' && *(p+1) == 's'){
 			char num[LOGNUM];
@@ -158,8 +158,8 @@ int stLog_t(LOG_LEVEL level,int pid,char* fmt,...){
 	while(*p){
 		if(*p == '%' && *(p+1) == 'd'){
 			char num[16];
-			memset(num,0,sizeof(num));
-			snprintf(num,sizeof(num),"%d",va_arg(ap, int));
+			memset(num,0,16);
+			snprintf(num,16,"%d",va_arg(ap, int));
 			strcat(buffer,num);
 		}
 		else if(*p == '%' && *(p+1) == 's'){
@@ -322,7 +322,7 @@ int intput_config_value(char *file_absolute_path, char *key, char **value, int *
 
     while (!feof(file))
     {
-        memset(lineBuf,0,sizeof(lineBuf));
+        memset(lineBuf,0,MaxLine);
         //读取行
         tempP = fgets(lineBuf,MaxLine,file);
         
